@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}Results - SOC{% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+    
+    
+
+    <div class="container">
+        <div class="hero text-center mt-3">
+            <h1 class="fw-bold text-white"><i class="fas fa-chart-line"></i> Batch Analysis Results</h1>
+            <p class="hero-subtitle">Deep Learning Classification Complete</p>
+            {% if is_truncated %}
+            <div class="badge bg-warning text-dark mb-3">
+                <i class="fas fa-info-circle"></i> Showing first 1,000 records of {{ stats.total_packets }} (Stats reflect full capture)
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="glass-card text-center">
+                    <h6 class="text-muted mb-2">Evaluated Packet Count</h6>
+                    <div class="stat-value text-primary">{{ stats.total_packets }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card text-center">
+                    <h6 class="text-muted mb-2">Benign Artifacts</h6>
+                    <div class="stat-value text-success">{{ stats.benign_count }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card text-center">
+                    <h6 class="text-muted mb-2">Malicious Anomalies</h6>
+                    <div class="stat-value text-danger">{{ stats.threat_count }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card text-center">
+                    <h6 class="text-muted mb-2">Inference Status</h6>
+                    <div class="stat-value text-warning"><i class="fas fa-check-circle"></i></div>
+                </div>
+            </div>
+        </div>
+
+        {% if stats.threat_count > 0 %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="glass-panel p-4">
+                    <h5 class="section-header-modern"><i class="fas fa-brain"></i> Feature Deviations (XAI)</h5>
+                    <img src="{{ url_for('static', filename='images/shap_summary.png') }}" class="xai-image shadow-sm w-100" style="max-height: 400px; object-fit: contain;" alt="AI Diagnosis Chart">
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="glass-panel p-4 mb-5">
+            <h5 class="section-header-modern"><i class="fas fa-list"></i> Detailed Forensic Ingestion Table</h5>
+            <div class="table-container">
+                <table class="table table-hover" id="results-table">
+                        <tr>
+                            <th>Flow ID</th>
+                            <th>Source IP</th>
+                            <th>Historical Label</th>
+                            <th>AI Diagnosis</th>
+                            <th>Raw_AI_Conf</th>
+                            <th>Final_Forensic_Label</th>
+                            <th>Forensic Reasoning</th>
+                            <th>Final_Forensic_Conf</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not results %}
+                        <tr>
+                            <td colspan="8" class="text-center p-5 text-muted fst-italic">
+                                <i class="fas fa-search mb-3 display-4 d-block"></i>
+                                No traffic packets found in the submitted artifact or none passed validation thresholds.
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% for row in results %}
+                        <tr class="{{ 'threat-high-bg' if row.Severity == 'High' else '' }}">
+                            <td class="text-xs text-muted">{{ row.Flow_ID }}</td>
+                            <td><span class="badge bg-light text-dark font-monospace">{{ row.Source_IP }}</span></td>
+                            <td class="{{ 'text-danger fw-bold' if row.Severity == 'High' else 'text-success' }}">{{ row.Historical_Label }}</td>
+                            <td>
+                                <span class="badge {{ 'bg-danger' if row.AI_Diagnosis != 'BENIGN' else 'bg-secondary' }}">
+                                    {{ row.AI_Diagnosis }}
+                                </span>
+                            </td>
+                            <td class="text-muted">{{ row.Raw_AI_Conf }}</td>
+                            <td>
+                                <span class="badge {% if row.Severity == 'High' %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ row.Final_Forensic_Label }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="text-info" style="font-size: 0.85rem; font-weight: 600;">{{ row.Forensic_Reasoning }}</div>
+                                <div class="text-muted mt-1" style="font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 2px;">
+                                    <strong>Top Indicators:</strong> {{ row.Top_Features }}
+                                </div>
+                            </td>
+                            <td class="fw-bold {{ 'text-threat-high' if row.Severity == 'High' else '' }}">{{ row.Final_Forensic_Conf }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

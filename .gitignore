@@ -1,0 +1,14 @@
+config.json
+*.db
+instance/
+__pycache__/
+*.pyc
+*.log
+.venv/
+mac_venv/
+.env
+.env.*
+.DS_Store
+*.pcap
+venv/
+app_log*.txt

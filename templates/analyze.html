@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Analyze - SOC{% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+
+    
+    
+
+    <div class="hero text-center mt-3">
+        <h1 class="fw-bold text-white"><i class="fas fa-microscope text-warning"></i> PCAP Forensic Lab</h1>
+        <p class="hero-subtitle">Upload raw traffic captures for deep-learning anomaly inference</p>
+    </div>
+
+    <main class="container">
+        <div id="mainc" class="row justify-content-center mt-4">
+            <div class="col-lg-12">
+                <div class="table-container p-5">
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
+                            <h2 class="fw-bold text-primary mb-3"><i class="fas fa-cloud-upload-alt me-2"></i> Ingest Network Artifacts</h2>
+                            <p class="text-muted mb-4 lead">Drop your security artifacts here. Our neural engine (IDS-v2.1) will traverse the binary streams to identify zero-day threats, volumetric DOS, and lateral movement signatures.</p>
+                            
+                            <div class="d-flex gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="h4 fw-bold text-success mb-0">100%</div>
+                                    <div class="text-xs text-muted">SECURE</div>
+                                </div>
+                                <div class="vr"></div>
+                                <div class="text-center">
+                                    <div class="h4 fw-bold text-info mb-0">ms</div>
+                                    <div class="text-xs text-muted">LATENCY</div>
+                                </div>
+                                <div class="vr"></div>
+                                <div class="text-center">
+                                    <div class="h4 fw-bold text-warning mb-0">AI</div>
+                                    <div class="text-xs text-muted">INFERENCE</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="p-4 rounded border border-dashed text-center" style="border: 2px dashed var(--border-color) !important; background: rgba(0,0,0,0.05);">
+                                <form action="{{ url_for('analyze') }}" method="POST" enctype="multipart/form-data">
+                                    <i class="fas fa-file-invoice text-faded mb-3 display-4"></i>
+                                    <div class="mb-4 text-start">
+                                        <label for="file" class="form-label fw-bold">Target File (CSV/PCAP)</label>
+                                        <input type="file" class="form-control" id="file" name="file"
+                                            accept=".csv,.pcap" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-custom w-100 py-3 shadow-lg">🚀 Launch Analysis Engine</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-12 mb-4">
+                <h3 class="fw-bold mb-4" style="color: var(--primary-color);"><i class="fas fa-brain me-2"></i> Detection Capabilities</h3>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="glass-card text-center hover-up transition-all">
+                    <i class="fas fa-bomb text-danger mb-3 display-6"></i>
+                    <h5 class="fw-bold">Volumetric Attacks</h5>
+                    <p class="text-muted small">Detection of DDoS, DoS Hulk, and SYN Flood flooding patterns that aim to saturate server resources.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="glass-card text-center hover-up transition-all">
+                    <i class="fas fa-user-secret text-warning mb-3 display-6"></i>
+                    <h5 class="fw-bold">Intrusion & Scans</h5>
+                    <p class="text-muted small">Identification of Port Scanning, Brute Force (SSH/FTP-Patator), and lateral network discovery.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="glass-card text-center hover-up transition-all">
+                    <i class="fas fa-code text-info mb-3 display-6"></i>
+                    <h5 class="fw-bold">Web Injections</h5>
+                    <p class="text-muted small">Inference of SQL Injection, XSS, and Advanced Web Scripting attacks via header and payload analysis.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    
+
+    
+
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

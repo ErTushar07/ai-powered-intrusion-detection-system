@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Logs - SOC{% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+    
+
+    <div class="container">
+        <div class="hero text-center mt-3">
+            <h1 class="fw-bold text-white"><i class="fas fa-database text-warning"></i> Historical Threat Logs</h1>
+            <p class="hero-subtitle">Vaulted high-confidence threats detected over time</p>
+        </div>
+
+        <div class="glass-panel p-3 mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-9">
+                    <form method="GET" action="{{ url_for('logs') }}" class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" name="search_ip" class="form-control" placeholder="Search by Source IP..." value="{{ search_ip }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="attack_type" class="form-select">
+                                <option value="">All Attack Types</option>
+                                {% for type in attack_types %}
+                                <option value="{{ type }}" {% if attack_type == type %}selected{% endif %}>{{ type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-custom w-100"><i class="fas fa-search"></i> Filter</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-3 d-flex gap-2 justify-content-end align-items-center">
+                    <a href="{{ url_for('export_csv', search_ip=search_ip, attack_type=attack_type) }}" class="btn btn-outline-custom" title="Export Current Result Set"><i class="fas fa-file-csv"></i> Export</a>
+                    <form action="{{ url_for('clear_logs') }}" method="POST" onsubmit="return confirm('CRITICAL: This will permanently redact all vaulted threat records. Proceed?');" class="m-0">
+                        <button type="submit" class="btn btn-outline-danger" title="Purge All Records"><i class="fas fa-trash-alt"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 table-container mb-5">
+            {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-hover table-borderless align-middle" id="logs-table">
+                    <thead class="table-light-header">
+                        <tr>
+                            <th style="width: 15%;">Incident Timestamp</th>
+                            <th>Source IP</th>
+                            <th>Historical</th>
+                            <th>AI Diag</th>
+                            <th>Raw Conf</th>
+                            <th class="text-center">Forensic Conf</th>
+                            <th class="text-center">Global Risk</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr class="log-row">
+                            <td class="text-muted" style="font-size: 0.85rem;">
+                                {{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </td>
+                            <td><span class="text-primary fw-bold">{{ log.source_ip }}</span></td>
+                            <td><span class="badge border border-info text-info">{{ log.historical_label or 'N/A' }}</span></td>
+                            <td><span class="badge border border-warning text-warning">{{ log.ai_diagnosis or 'N/A' }}</span></td>
+                            <td class="text-faded text-xs">{{ log.raw_ai_conf or 'N/A' }}</td>
+                            <td class="text-danger fw-bold">{{ log.final_forensic_label or log.label }}</td>
+                            <td class="text-center">
+                                <span class="fw-bold text-threat-high">{{ log.final_forensic_conf or (log.confidence * 100)|round(2)|string + '%' }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-{{ 'danger' if log.reputation > 70 else ('warning' if log.reputation > 20 else 'success') }}">{{ log.reputation }}% OSINT</span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <button class="btn btn-sm btn-outline-info" onclick="analyzeThreat('{{log.id}}')" title="✨ AI Forensics Report">
+                                        <i class="fas fa-wand-magic-sparkles"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="generateExecutiveReport('{{log.id}}')" title="📄 Generate Executive Forensic Report (PDF)">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-success" onclick="submitFeedback('{{log.id}}', 'CONFIRMED')" title="Confirm Identity">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning" onclick="submitFeedback('{{log.id}}', 'FALSE_POSITIVE')" title="Flag False Positive">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    <div class="vr mx-1"></div>
+                                    {% if log.source_ip in active_bans %}
+                                    <button class="btn btn-sm btn-success" onclick="unblockIP('{{log.source_ip}}')" title="🔓 Active Ban: Release IP">
+                                        <i class="fas fa-shield-slash"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-sm btn-outline-danger" onclick="blockIP('{{log.source_ip}}', 'Manual ban from threat logs')" title="🛡️ Active Defense: Block and Nullify Route">
+                                        <i class="fas fa-shield-halved"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="detail-row">
+                            <td colspan="8" class="p-0">
+                                <div class="px-4 py-2 bg-dark-soft border-top border-bottom border-secondary-subtle" style="font-size: 0.85rem;">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-7 border-end border-secondary-subtle">
+                                            <div class="text-info fw-bold mb-1"><i class="fas fa-microscope me-1"></i> Forensic Reasoning:</div>
+                                            <div class="text-muted">{{ log.forensic_reasoning or 'Baseline ingestion: Continuous monitoring protocol active.' }}</div>
+                                        </div>
+                                        <div class="col-md-5 ps-4">
+                                            <div class="text-warning fw-bold mb-1"><i class="fas fa-fingerprint me-1"></i> Top Indicators:</div>
+                                            <div class="text-faded text-xs italic">{{ log.top_features or 'Signatures consistent with standard flow telemetry.' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if pagination.pages > 1 %}
+            
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center p-5 text-muted">
+                <i class="fas fa-check-circle status-online p-3" title="No threats detected"></i>
+                <h4>No threats logged yet</h4>
+                <p>All clean matching your criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- AI Forensics Modal -->
+    <div class="modal fade" id="forensicsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content table-container">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fas fa-brain me-2"></i> AI Forensic Incident Report</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="ai-report-content" class="text-muted forensic-report">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-3">Consulting Neural Forensics Layer...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close Investigation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // AI Forensics Logic
+        const forensicModal = new bootstrap.Modal(document.getElementById('forensicsModal'));
+        async function analyzeThreat(logId) {
+            document.getElementById('ai-report-content').innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3">Consulting Neural Forensics Layer...</p>
+                </div>`;
+            forensicModal.show();
+            
+            try {
+                const response = await fetch(`/api/forensics/${logId}`);
+                const data = await response.json();
+                let html = data.report.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+                document.getElementById('ai-report-content').innerHTML = html;
+            } catch (error) {
+                document.getElementById('ai-report-content').innerHTML = `<div class="alert alert-danger">Forensic link failed: ${error.message}</div>`;
+            }
+        }
+
+        async function generateExecutiveReport(logId) {
+            const row = event.currentTarget.closest('.d-flex');
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/forensics/executive_report/${logId}`);
+                const data = await response.json();
+                if (data.report_url) {
+                    window.open(data.report_url, '_blank');
+                    alert(data.status);
+                } else {
+                    alert(data.error || "Report synthesis failed.");
+                }
+            } catch (error) {
+                alert(`Case Management Link Failure: ${error.message}`);
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        async function submitFeedback(logId, decision) {
+            try {
+                const response = await fetch(`/api/feedback/${logId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ decision: decision, notes: "Audited via SOC Grid." })
+                });
+                const data = await response.json();
+                alert(data.status || data.error);
+                location.reload(); 
+            } catch (error) {
+                alert(`Feedback capture failed: ${error.message}`);
+            }
+        }
+
+        // --- PHASE 1: ACTIVE DEFENSE AJAX ---
+        async function blockIP(ip, reason) {
+            if (!confirm(`CRITICAL: Block IP ${ip}? This will enforce a system-level firewall drop.`)) return;
+            
+            try {
+                const response = await fetch('/api/firewall/block', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip: ip, reason: reason })
+                });
+                const data = await response.json();
+                alert(data.status);
+                location.reload();
+            } catch (error) {
+                alert(`IPS Execution failure: ${error.message}`);
+            }
+        }
+
+        async function unblockIP(ip) {
+            if (!confirm(`Release active ban for IP ${ip}?`)) return;
+            
+            try {
+                const response = await fetch('/api/firewall/unblock', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip: ip })
+                });
+                const data = await response.json();
+                alert(data.status);
+                location.reload();
+            } catch (error) {
+                alert(`IPS Unblock failure: ${error.message}`);
+            }
+        }
+    </script>
+{% endblock %}

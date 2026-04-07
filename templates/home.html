@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - SOC{% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+
+    
+
+    <header class="hero text-center mt-3">
+        <div class="container">
+            <h1 class="display-4">Zero-Day Network Threat Detection</h1>
+            <p class="lead" style="color: #f0f0f0;">Protect your infrastructure with AI-based deep learning traffic inference</p>
+            
+            <div class="row mt-5 justify-content-center">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>{{stats.total_threats}}</h3>
+                        <p class="m-0" style="color: #f8f9fa;">Total Logged Threats</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>{{stats.threshold}}%</h3>
+                        <p class="m-0" style="color: #f8f9fa;">Alert Confidence Threshold</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3 class="text-truncate px-2">{{stats.latest_threat.label if stats.latest_threat else 'None'}}</h3>
+                        <p class="m-0" style="color: #f8f9fa;">Recent Threat Type</p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{url_for('monitoring')}}" class="btn btn-lg btn-custom mt-5">Launch Command Center XR <i class="fas fa-rocket ms-2"></i></a>
+        </div>
+    </header>
+
+    <main class="container">
+        <section id="features" class="py-5">
+            <h2 class="text-center mb-5 section-title">System Capabilities</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <a href="{{url_for('analyze')}}" class="text-decoration-none feature-link" title="Analyze Batch PCAP/CSV Files">
+                            <div class="card-body text-center">
+                                <i class="fas fa-upload feature-icon"></i>
+                                <h5 class="card-title fw-bold">Batch PCAP/CSV Analysis</h5>
+                                <p class="card-text text-muted">Upload historical CIC-IDS format logs to get instant AI-based classification and generated PDF/CSV reports.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <a href="{{url_for('monitoring')}}" class="text-decoration-none feature-link" title="Monitor Real-Time Network Traffic">
+                            <div class="card-body text-center">
+                                <i class="fas fa-satellite-dish feature-icon"></i>
+                                <h5 class="card-title fw-bold">Real-Time Packets</h5>
+                                <p class="card-text text-muted">Watch true live streaming traffic with deep-learning predictions displayed in a dynamic chart interface.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card h-100">
+                        <a href="{{url_for('logs')}}" class="text-decoration-none feature-link" title="View Historical Threat Logs">
+                            <div class="card-body text-center">
+                                <i class="fas fa-database feature-icon"></i>
+                                <h5 class="card-title fw-bold">Historical Threat Logs</h5>
+                                <p class="card-text text-muted">All high-confidence malicious packets are securely vaulted to an internal SQLite database for auditing.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="attacks" class="py-5">
+            <h2 class="text-center mb-4 section-title">Threat Taxonomy</h2>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card feature-card h-100">
+                        <a href="{{ url_for('logs', attack_type='DoS') }}" class="text-decoration-none feature-link" title="Investigate DoS/DDoS Incidents">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-server text-danger"></i> DoS / DDoS Operations</h5>
+                                <p class="card-text text-muted">Detect structural anomalies associated with DoS Hulk, Slowloris, and massive volumetric flooding.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card feature-card h-100">
+                        <a href="{{ url_for('logs', attack_type='PortScan') }}" class="text-decoration-none feature-link" title="Audit PortScan Reconnaissance">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-search text-warning"></i> PortScanning Recon</h5>
+                                <p class="card-text text-muted">Identify aggressive or stealth TCP/UDP port scans mapping internal network topologies.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card feature-card h-100">
+                        <a href="{{ url_for('logs', attack_type='Patator') }}" class="text-decoration-none feature-link" title="Review Brute Force Attempts">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-key text-info"></i> Brute Force Attacks</h5>
+                                <p class="card-text text-muted">Identify FTP-Patator, SSH-Patator, and web-based credential stuffing based on timing signatures.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card feature-card h-100">
+                        <a href="{{ url_for('logs', attack_type='Bot') }}" class="text-decoration-none feature-link" title="Explore Botnet C&C Logs">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-robot text-success"></i> Botnet C&C</h5>
+                                <p class="card-text text-muted">Capture heartbeat communications and automated malware coordination traffic.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    
+
+    
+
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - SOC{% endblock %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block content %}
+    
+
+    <div class="container">
+        <div class="hero text-center mt-3">
+            <h1 class="fw-bold text-white"><i class="fas fa-sliders-h text-warning"></i> System Configuration</h1>
+            <p class="hero-subtitle">Tune neural network sensitivities and mitigation protocols</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="settings-container">
+            <form method="POST" action="{{ url_for('settings_page') }}">
+                
+                <h4 class="section-header-modern">
+                    <i class="fas fa-shield-virus"></i> Automated Mitigation (IPS Feature)
+                </h4>
+                
+                <div class="mb-4 d-flex justify-content-between align-items-center form-switch card-faded">
+                    <label class="form-check-label mb-0" for="active_block">
+                        <strong class="text-md"><i class="fas fa-shield-alt text-danger"></i> Enable Auto-Banning (macOS pf Firewall)</strong><br>
+                        <span class="text-muted small text-faded">If enabled, the system will execute terminal commands to actively ban malicious IPs detecting during Live Monitoring.</span>
+                    </label>
+                    <input class="form-check-input m-0 cursor-pointer switch-lg" type="checkbox" id="active_block" name="active_block" {% if config_data.get('active_block') %}checked{% endif %}>
+                </div>
+
+                <h4 class="mb-4 mt-5" style="color: var(--secondary-color); border-bottom: 2px solid #eaeaea; padding-bottom: 10px;">
+                    <i class="fas fa-brain"></i> AI Sensitivities
+                </h4>
+
+                <div class="mb-4">
+                    <label for="confidence_threshold" class="form-label">Threat Confidence Threshold (%)</label>
+                    <input type="number" class="form-control" id="confidence_threshold" name="confidence_threshold" value="{{ config_data.get('confidence_threshold', 95) }}" min="50" max="100">
+                    <div class="form-text text-muted">Minimum deep-learning confidence required to vault a log into the database or trigger a firewall ban.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="sniff_interface" class="form-label">Active Sniffing Interface</label>
+                    <select class="form-select" id="sniff_interface" name="sniff_interface">
+                        <option value="en0" {% if config_data.get('sniff_interface') == 'en0' %}selected{% endif %}>en0 (Default Wi-Fi)</option>
+                        <option value="en1" {% if config_data.get('sniff_interface') == 'en1' %}selected{% endif %}>en1 (Ethernet / Adapter)</option>
+                        <option value="lo0" {% if config_data.get('sniff_interface') == 'lo0' %}selected{% endif %}>lo0 (Localhost Loopback)</option>
+                    </select>
+                    <div id="interface-status" class="form-text text-muted">Detecting available hardware...</div>
+                </div>
+
+                <h4 class="mb-4 mt-5" style="color: var(--secondary-color); border-bottom: 2px solid #eaeaea; padding-bottom: 10px;">
+                    <i class="fas fa-microchip"></i> SOC Intelligence Keys
+                </h4>
+
+                <div class="mb-4">
+                    <label for="gemini_api_key" class="form-label">Google Gemini API Key (For AI Forensics)</label>
+                    <input type="password" class="form-control" id="gemini_api_key" name="gemini_api_key" value="{{ config_data.get('gemini_api_key', '') }}" placeholder="AIzaSy...">
+                    <div class="form-text text-muted">Required for generating human-readable forensic incident reports.</div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="abuseipdb_api_key" class="form-label">AbuseIPDB API Key (For OSINT)</label>
+                    <input type="password" class="form-control" id="abuseipdb_api_key" name="abuseipdb_api_key" value="{{ config_data.get('abuseipdb_api_key', '') }}" placeholder="Enter API Key">
+                    <div class="form-text text-muted">Required for checking malicious IP reputation across global databases.</div>
+                </div>
+
+                <h4 class="mb-4 mt-5" style="color: var(--secondary-color); border-bottom: 2px solid #eaeaea; padding-bottom: 10px;">
+                    <i class="fab fa-discord"></i> Platform Integrations
+                </h4>
+
+                <div class="mb-5">
+                    <label for="webhook_url" class="form-label">Discord / Slack Incident Webhook URL</label>
+                    <input type="url" class="form-control" id="webhook_url" name="webhook_url" placeholder="https://discord.com/api/webhooks/..." value="{{ config_data.get('webhook_url', '') }}">
+                    <div class="form-text text-muted">Receive instant system notifications whenever a massive anomaly breaches the network.</div>
+                </div>
+
+                <h4 class="mb-4 mt-5" style="color: var(--secondary-color); border-bottom: 2px solid #eaeaea; padding-bottom: 10px;">
+                    <i class="fas fa-user-shield"></i> Security & Identity (Phase 12)
+                </h4>
+
+                <div class="mb-4 d-flex justify-content-between align-items-center card-faded p-3 rounded">
+                    <div>
+                        <strong class="text-md"><i class="fas fa-key text-warning"></i> Multifactor Authentication (MFA)</strong><br>
+                        <span class="text-muted small text-faded">Enforce Zero-Trust security for all SOC administrative sessions.</span>
+                    </div>
+                    <div class="text-end">
+                        {% if current_user.mfa_enabled %}
+                            <span class="badge bg-success mb-2 d-block"><i class="fas fa-check-circle"></i> MFA ACTIVE</span>
+                            <a href="{{ url_for('mfa_setup') }}" class="btn btn-sm btn-outline-warning">Reset MFA Secret</a>
+                        {% else %}
+                            <span class="badge bg-danger mb-2 d-block"><i class="fas fa-times-circle"></i> MFA DISABLED</span>
+                            <a href="{{ url_for('mfa_setup') }}" class="btn btn-sm btn-warning fw-bold">Setup MFA Layer</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="text-end mt-5">
+                    <button type="submit" class="btn btn-custom"><i class="fas fa-save"></i> Save Configuration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    
+    <script>
+        // Dynamic Interface Detection
+        async function fetchInterfaces() {
+            try {
+                const response = await fetch('/api/interfaces');
+                const interfaces = await response.json();
+                const select = document.getElementById('sniff_interface');
+                const status = document.getElementById('interface-status');
+                
+                if (interfaces.length > 0) {
+                    const currentValue = select.value;
+                    select.innerHTML = '';
+                    interfaces.forEach(iface => {
+                        const opt = document.createElement('option');
+                        opt.value = iface;
+                        opt.textContent = `${iface} (Detected Hardware)`;
+                        if (iface === currentValue) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                    status.innerHTML = `<i class="fas fa-check-circle text-success"></i> ${interfaces.length} active interfaces detected.`;
+                }
+            } catch (e) {
+                console.error("Interface detection failed:", e);
+            }
+        }
+        fetchInterfaces();
+    </script>
+
+{% endblock %}
+
+{% block scripts %}
+
+{% endblock %}
