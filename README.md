@@ -153,4 +153,4 @@ ngrok http 5001
 
 ## Author
 **Tusharul Amin** 
-- GitHub: [@githubertushar07](https://github.com/githubertushar07)
+- GitHub: [@ErTushar07](https://github.com/ErTushar07)
