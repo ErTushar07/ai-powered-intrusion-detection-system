@@ -10,22 +10,22 @@ def db_worker_thread(app, db, ThreatLog):
     Background worker that asynchronously writes items to the SQLite DB
     to avoid blocking the extremely fast packet sniffing loop.
     """
-    with app.app_context():
-        while True:
-            items_to_commit = []
-            
-            # Extract up to 100 items from queue quickly
-            while len(items_to_commit) < 100:
-                try:
-                    # Timeout helps to commit whatever we have every 0.5s if influx is slow
-                    item = log_queue.get(timeout=0.5)
-                    if item is None:
-                        return # Poison pill indicating shutdown
-                    items_to_commit.append(item)
-                except queue.Empty:
-                    break
-                    
-            if items_to_commit:
+    while True:
+        items_to_commit = []
+        
+        # Extract up to 100 items from queue quickly
+        while len(items_to_commit) < 100:
+            try:
+                # Timeout helps to commit whatever we have every 0.5s if influx is slow
+                item = log_queue.get(timeout=0.5)
+                if item is None:
+                    return # Poison pill indicating shutdown
+                items_to_commit.append(item)
+            except queue.Empty:
+                break
+                
+        if items_to_commit:
+            with app.app_context():
                 try:
                     for log_item in items_to_commit:
                         # Map forensic metadata to the database model
@@ -61,5 +61,5 @@ def db_worker_thread(app, db, ThreatLog):
                 except Exception as e:
                     print(f"[-] FATAL: Background Database Thread Error: {e}")
                     db.session.rollback()
-                    
-            time.sleep(0.01) # Yield CPU slightly
+                
+        time.sleep(0.01) # Yield CPU slightly

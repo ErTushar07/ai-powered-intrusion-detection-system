@@ -47,13 +47,17 @@ Traditional signature-based Intrusion Detection Systems (IDS) frequently fail ag
 
 ## Features
 - 🧠 **Neural Threat Inference:** Multi-tier ML pipeline (CNN/RF/IsoForest).
-- 🤖 **Gemini AI Forensics:** Automated human-readable executive incident dossiers.
-- 🛡️ **Active IPS Interdiction:** Real-time, automated firewall blocking of adversaries.
-- 🕸️ **Command Center XR UI:** Live interactive Cytoscape network mapping and Geo-Intel plotting.
+- 🤖 **Multi-Agent GenAI Forensics:** Uses a 3-persona architecture (OSINT, Protocol Analysis, Commander) with Gemini 1.5.
+- 🛡️ **Edge SOAR & Local IPS:** Cloudflare Edge API proxy integration + local system-level firewall blocks.
+- 🕸️ **MITRE ATT&CK Tracking:** Instantly translates flows into MITRE TTP matrix identifiers in the Live SOC.
+- 🌐 **Distributed Edge Architecture:** Headless `edge_node.py` clients pushing packets via secure REST.
+- 🧨 **Automated Sandbox Detonation:** Suspicious binary flows (>98% conf) automatically dispatched to Cuckoo Sandbox API.
+- 🚀 **eBPF Kernel Acceleration:** Experimental Phase-7 hooks into Linux XDP for 10Gbps+ flow extraction bypassing user-space.
 - 🍯 **Deception Honey-Net:** Traps and logs internal/external lateral movement attempts.
 - 📄 **Executive PDF Reporting:** One-click audit-ready PDF generation using `ReportLab`.
 - 🔔 **Instant Alerting:** Webhook integrations for automated Slack/Discord SIEM alerts.
-- ☁️ **Cloud Native:** Ready for Docker, Render.com, or public Ngrok tunneling.
+- 🧪 **Enterprise IDS Integration:** Dual-engine monitoring with **Suricata (Rule-based)** and **Wireshark (TShark DPI)**.
+- 🛡️ **Hardened Forensic Core:** Multi-tier SQL injection protection and tiered threat categorization (High/Medium/Low).
 
 ## Tech Stack
 - **Languages:** Python (3.11+), JavaScript (ES6+), HTML5/CSS3
@@ -107,7 +111,7 @@ ai-powered-intrusion-detection-system/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/MohdHassaan12/ai-powered-intrusion-detection-system.git
+git clone https://github.com/ErTushar07/ai-powered-intrusion-detection-system.git
 cd ai-powered-intrusion-detection-system
 
 # 2. Initialize a secure virtual environment

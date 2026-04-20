@@ -69,6 +69,7 @@
                             <th>Source IP</th>
                             <th>Historical Label</th>
                             <th>AI Diagnosis</th>
+                            <th>MITRE TTP</th>
                             <th>Raw_AI_Conf</th>
                             <th>Final_Forensic_Label</th>
                             <th>Forensic Reasoning</th>
@@ -92,6 +93,11 @@
                             <td>
                                 <span class="badge {{ 'bg-danger' if row.AI_Diagnosis != 'BENIGN' else 'bg-secondary' }}">
                                     {{ row.AI_Diagnosis }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info text-dark" style="font-size: 0.7rem;">
+                                    <i class="fas fa-shield-virus"></i> {{ row.MITRE or 'N/A' }}
                                 </span>
                             </td>
                             <td class="text-muted">{{ row.Raw_AI_Conf }}</td>

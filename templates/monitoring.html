@@ -42,16 +42,16 @@
                         <i class="fas fa-heartbeat text-primary animate-pulse me-2"></i> SOC BIOS HEALTH
                     </h5>
                     <div class="d-flex justify-content-center gap-3 mb-3">
-                        <div class="health-metric-box flex-grow-1 p-2 rounded bg-dark border border-secondary shadow-sm">
-                            <span class="theme-text-contrast d-block mb-1" style="font-size: 0.6rem; font-weight: 700; opacity: 0.7;">CPU LOAD</span>
+                        <div class="health-metric-box flex-grow-1 p-2 rounded shadow-sm">
+                            <span class="metric-label d-block mb-1">CPU LOAD</span>
                             <span id="health-cpu" class="text-cyan-glow fw-bold fs-5">--%</span>
                         </div>
-                        <div class="health-metric-box flex-grow-1 p-2 rounded bg-dark border border-secondary shadow-sm">
-                            <span class="theme-text-contrast d-block mb-1" style="font-size: 0.6rem; font-weight: 700; opacity: 0.7;">MEMORY</span>
+                        <div class="health-metric-box flex-grow-1 p-2 rounded shadow-sm">
+                            <span class="metric-label d-block mb-1">MEMORY</span>
                             <span id="health-mem" class="text-warning-glow fw-bold fs-5">--%</span>
                         </div>
                     </div>
-                    <div id="health-status" class="status-indicator-v2 badge bg-dark text-cyan-glow border border-info border-opacity-50 w-100 py-2">
+                    <div id="health-status" class="status-indicator-v2 badge border border-opacity-50 w-100 py-2">
                         <i class="fas fa-circle-notch fa-spin me-2"></i> SNIFFER: OPERATIONAL
                     </div>
                 </div>
@@ -96,13 +96,13 @@
             <div class="col-md-12">
                 <ul class="nav nav-pills gap-2 mb-3" id="socTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active bg-dark text-white border-0 rounded p-2 px-3" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-view" type="button" role="tab" aria-controls="map-view" aria-selected="true"><i class="fas fa-globe"></i> Geo-Intel</button>
+                        <button class="nav-link active border-0 rounded p-2 px-3" id="map-tab" data-bs-toggle="tab" data-bs-target="#map-view" type="button" role="tab" aria-controls="map-view" aria-selected="true"><i class="fas fa-globe"></i> Geo-Intel</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link bg-dark text-white border-0 rounded p-2 px-3" id="topology-tab" data-bs-toggle="tab" data-bs-target="#topology-view" type="button" role="tab" aria-controls="topology-view" aria-selected="false"><i class="fas fa-network-wired"></i> Topology Map</button>
+                        <button class="nav-link border-0 rounded p-2 px-3" id="topology-tab" data-bs-toggle="tab" data-bs-target="#topology-view" type="button" role="tab" aria-controls="topology-view" aria-selected="false"><i class="fas fa-network-wired"></i> Topology Map</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link bg-dark text-white border-0 rounded p-2 px-3" id="deception-tab" data-bs-toggle="tab" data-bs-target="#deception-view" type="button" role="tab" aria-controls="deception-view" aria-selected="false"><i class="fas fa-spider"></i> Honey-Net</button>
+                        <button class="nav-link border-0 rounded p-2 px-3" id="deception-tab" data-bs-toggle="tab" data-bs-target="#deception-view" type="button" role="tab" aria-controls="deception-view" aria-selected="false"><i class="fas fa-spider"></i> Honey-Net</button>
                     </li>
                 </ul>
                 <div class="tab-content" id="socTabsContent">
@@ -140,6 +140,7 @@
                         <th>Classification</th>
                         <th>Confidence</th>
                         <th>Global Risk</th>
+                        <th>MITRE TTP</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -429,6 +430,14 @@
         let benignCount = 0;
         let threatCount = 0;
 
+        function getThemeColor() {
+            return getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+        }
+
+        function getGridColor() {
+            return document.documentElement.getAttribute('data-theme') === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+        }
+
         const ctx = document.getElementById('trafficChart').getContext('2d');
         const trafficChart = new Chart(ctx, {
             type: 'line',
@@ -459,10 +468,10 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    x: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                    y: { grid: { color: '#333' }, ticks: { color: '#888', stepSize: 1 }, beginAtZero: true }
+                    x: { grid: { color: getGridColor() }, ticks: { color: getThemeColor() } },
+                    y: { grid: { color: getGridColor() }, ticks: { color: getThemeColor(), stepSize: 1 }, beginAtZero: true }
                 },
-                plugins: { legend: { labels: { color: '#fff' } } },
+                plugins: { legend: { labels: { color: getThemeColor() } } },
                 animation: { duration: 0 }
             }
         });
@@ -481,9 +490,29 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 12 } } }
+                plugins: { legend: { position: 'bottom', labels: { color: getThemeColor(), boxWidth: 12 } } }
             }
         });
+
+        function syncChartTheme() {
+            const newColor = getThemeColor();
+            const gridColor = getGridColor();
+            trafficChart.options.scales.x.ticks.color = newColor;
+            trafficChart.options.scales.x.grid.color = gridColor;
+            trafficChart.options.scales.y.ticks.color = newColor;
+            trafficChart.options.scales.y.grid.color = gridColor;
+            trafficChart.options.plugins.legend.labels.color = newColor;
+            trafficChart.update();
+            
+            threatPieChart.options.plugins.legend.labels.color = newColor;
+            threatPieChart.update();
+        }
+
+        // Hook into theme toggle
+        const themeBtn = document.getElementById('theme-toggle');
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => setTimeout(syncChartTheme, 100));
+        }
 
         const threatDistributionMap = {};
 
@@ -583,7 +612,8 @@
                 <td><span style="color: #4a90e2; font-weight: 600;">${data.Source_IP}</span></td>
                 <td class="${data.is_threat ? 'text-threat-high' : 'text-threat-low'}">${data.Label}</td>
                 <td><span class="badge bg-secondary">${data.Conf}</span></td>
-                <td><span class="badge bg-${data.osint_score > 70 ? 'danger' : (data.osint_score > 20 ? 'warning' : 'success')}">${data.osint_score}% OSINT</span></td>
+                <td><span class="badge bg-${(data.osint_score || 0) > 70 ? 'danger' : ((data.osint_score || 0) > 20 ? 'warning' : 'success')}">${data.osint_score != null ? data.osint_score : 0}% OSINT</span></td>
+                <td><span class="badge bg-info text-dark shadow-sm" style="font-size: 0.70rem;"><i class="fas fa-shield-virus"></i> ${data.MITRE || 'T1071 (Application Layer)'}</span></td>
                 <td>${actionsHtml}</td>
             `;
 
@@ -655,19 +685,19 @@
                     
                     if (cpuEl) cpuEl.innerText = `${data.cpu_load}%`;
                     if (memEl) memEl.innerText = `${data.memory_used}%`;
-                    if (statusEl) {
-                        const statusText = data.sniffer_status.toUpperCase();
-                        statusEl.innerHTML = `<i class="fas fa-${data.sniffer_status === 'Operational' ? 'circle-notch fa-spin' : 'exclamation-triangle'} me-2"></i> SNIFFER: ${statusText}`;
-                        
-                        // Update status colors without clearing existing indicator classes
-                        if (data.sniffer_status === 'Operational') {
-                            statusEl.classList.remove('text-danger', 'border-danger');
-                            statusEl.classList.add('text-cyan-glow', 'border-info');
-                        } else {
-                            statusEl.classList.remove('text-cyan-glow', 'border-info');
-                            statusEl.classList.add('text-danger', 'border-danger');
+                        if (statusEl) {
+                            const statusText = data.sniffer_status.toUpperCase();
+                            statusEl.innerHTML = `<i class="fas fa-${data.sniffer_status === 'Operational' ? 'circle-notch fa-spin' : 'exclamation-triangle'} me-2"></i> ${statusText}`;
+                            
+                            // Update status colors
+                            if (data.sniffer_status === 'Operational') {
+                                statusEl.classList.remove('text-danger', 'border-danger', 'bg-danger');
+                                statusEl.classList.add('text-cyan-glow', 'border-info', 'bg-info', 'bg-opacity-10');
+                            } else {
+                                statusEl.classList.remove('text-cyan-glow', 'border-info', 'bg-info', 'bg-opacity-10');
+                                statusEl.classList.add('text-danger', 'border-danger', 'bg-danger', 'bg-opacity-10');
+                            }
                         }
-                    }
                 }).catch(e => console.error("Health Update Error:", e));
         }
 

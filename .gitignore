@@ -12,3 +12,15 @@ mac_venv/
 *.pcap
 venv/
 app_log*.txt
+eve.json
+npcap-installer.exe
+suricata/eve.json
+tests/
+scratch/
+test.csv
+test_import.py
+trace_app.py
+mapping.json
+new_url.txt
+query
+static/reports/incident_*.pdf

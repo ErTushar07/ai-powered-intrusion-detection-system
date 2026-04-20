@@ -2,6 +2,7 @@
 import os
 import sqlite3
 import json
+import re
 from google import genai
 from dotenv import load_dotenv
 
@@ -18,7 +19,8 @@ TABLE threat_log (
     ai_diagnosis VARCHAR(50),
     final_forensic_label VARCHAR(50),
     forensic_reasoning TEXT,
-    final_forensic_conf VARCHAR(20)
+    final_forensic_conf VARCHAR(20),
+    mitre_technique VARCHAR(100)
 )
 TABLE firewall_rule (
     id INTEGER PRIMARY KEY,
@@ -58,17 +60,29 @@ def soc_chat_analyst(message, api_key=None, history=[]):
         decision_prompt = f"{system_instructions}\n\nUSER QUERY: {message}\n\nShould we search the database? If yes, provide ONLY the SQL SELECT. If no, say 'NO_SQL: [your response]'."
         
         resp = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash-lite",
             contents=decision_prompt
         )
         raw_text = resp.text.strip()
 
         if "SELECT" in raw_text.upper() and "FROM" in raw_text.upper():
-            # Clean SQL
+            # 🛡️ ENTERPRISE DEFENSE LAYER: Multi-Stage SQL Sanitization
             clean_sql = raw_text.replace("```sql", "").replace("```", "").strip()
-            # Safety check
-            if "DROP" in clean_sql.upper() or "DELETE" in clean_sql.upper():
-                return "Safety Violation: Malicious SQL patterns detected. Discovery session reset."
+            
+            # 1. Structural Validation (Strict Regex)
+            # Only allow SELECT statements from threat_log or firewall_rule
+            allowed_pattern = r"^\s*SELECT\s+.*\s+FROM\s+(threat_log|firewall_rule)\b"
+            if not re.match(allowed_pattern, clean_sql, re.IGNORECASE):
+                return "Safety Violation: Only read-only queries on telemetry tables are permitted. Discovery session reset."
+
+            # 2. Block-list Enforcement (Defense in Depth)
+            forbidden = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "CREATE", "TRUNCATE", "REPLACE", "GRANT", "REVOKE"]
+            if any(term in clean_sql.upper() for term in forbidden):
+                return "Safety Violation: Unauthorized SQL keyword detected. Potential injection attempt logged."
+            
+            # 3. Complexity Limit
+            if len(clean_sql) > 500:
+                return "Safety Violation: Query complexity exceeds forensic safety limits."
             
             # Execute
             try:
@@ -84,7 +98,7 @@ def soc_chat_analyst(message, api_key=None, history=[]):
                 # Explain results
                 final_prompt = f"The SOC operator asked: {message}\nThe database returned: {json.dumps(results)}\nProvide a 2-paragraph expert summary and threat attribution based on this data."
                 final_resp = client.models.generate_content(
-                    model="gemini-2.5-flash",
+                    model="gemini-2.0-flash-lite",
                     contents=final_prompt
                 )
                 return final_resp.text

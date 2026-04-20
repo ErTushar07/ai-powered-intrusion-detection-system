@@ -296,10 +296,12 @@ body {
 
 #ai-chat-hub {
     position: fixed;
-    bottom: 110px;
+    bottom: 100px;
     right: 30px;
     width: 380px;
-    height: 550px;
+    height: 60vh; /* Responsive height */
+    min-height: 400px;
+    max-height: 600px;
     border-radius: 1.5rem;
     overflow: hidden;
     z-index: 1050;
@@ -463,6 +465,25 @@ body {
 
 [data-theme="dark"] .theme-text-contrast {
     color: #ffffff !important;
+}
+
+.health-metric-box {
+    background: rgba(var(--bg-rgb), 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .health-metric-box {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.metric-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--light-text-color);
+    text-transform: uppercase;
+    opacity: 0.8;
 }
 
 /* Force Modal Backgrounds and Text Colors */

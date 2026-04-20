@@ -6,7 +6,7 @@ load_dotenv()
 
 def get_forensic_analysis(log_data, api_key=None):
     """
-    Uses Google Gemini 1.5 Flash to generate a high-fidelity forensic incident report.
+    Uses Google Gemini 2.0 Flash Lite to generate a high-fidelity forensic incident report.
     Combines neural classification, OSINT reputation, and binary signature matches.
     """
     if not api_key:
@@ -20,8 +20,17 @@ def get_forensic_analysis(log_data, api_key=None):
         
         # Structure the incident for the LLM
         prompt = f"""
-        You are a top-tier SOC Forensic Analyst. Analyze the following Intrusion Detection alert:
-        
+        You are the 'AdvancedIDS Multi-Agent SOC Forensics Engine'. You are orchestrating 3 distinct specialized AI personas to triage this network alert:
+
+        [AGENT 1: The Threat Intelligence OSINT Surveyor]
+        Your role is to analyze the source IP and OSINT context. Find any known APT associations.
+
+        [AGENT 2: The Network Protocol Reverse Engineer]
+        Your role is to decode the meaning of the neural classification and the DPI rules flagged. Why did the deep learning engine think this is anomalous traffic?
+
+        [AGENT 3: The Incident Commander]
+        Your role is to map the attack to exact MITRE ATT&CK Framework identifiers and prescribe strict containment commands.
+
         [INCIDENT TELEMETRY]
         Flow ID: {log_data.get('flow_id')}
         Source IP: {log_data.get('source_ip')}
@@ -30,16 +39,20 @@ def get_forensic_analysis(log_data, api_key=None):
         DPI Signatures: {log_data.get('reasoning')}
         Historical Label: {log_data.get('historical_label')}
         
-        [REQUIREMENTS]
-        1. Contextual summary of the threat.
-        2. Threat Attribution: Based on signatures/behavior, what kind of actor is this?
-        3. Recommended Actions: Provide 3 exact system commands (e.g. iptables, pfctl) for the operator.
-        
-        Format your response using bold headings. Be professional and technical.
+        [OUTPUT FORMAT]
+        Respond with structured markdown using these exact headers:
+        ### 🌐 OSINT Agent Intel
+        (Provide Agent 1's analysis)
+
+        ### 🔬 Protocol Engineer Analysis
+        (Provide Agent 2's reasoning)
+
+        ### 🛡️ Commander's MITRE Mapping
+        (Provide specific MITRE ATT&CK Tactics/Techniques mapping like T1046, and 3 decisive mitigation steps)
         """
         
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash-lite",
             contents=prompt
         )
         return response.text
@@ -82,7 +95,7 @@ def get_strategic_intel_summary(recent_logs, active_bans=[], api_key=None):
         """
         
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash-lite",
             contents=prompt
         )
         return response.text

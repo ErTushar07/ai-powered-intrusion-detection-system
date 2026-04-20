@@ -1,0 +1,39 @@
+# 🛡️ AdvancedIDS - Suricata Configuration
+%YAML 1.1
+---
+
+vars:
+  address-groups:
+    HOME_NET: "[172.20.10.0/24]"
+    EXTERNAL_NET: "any"
+
+  port-groups:
+    HTTP_PORTS: "80"
+    SHELL_PORTS: "22"
+
+stats:
+  enabled: yes
+  interval: 8
+
+default-rule-path: c:\Users\ASFJK\Downloads\ai-powered-intrusion-detection-system-main\ai-powered-intrusion-detection-system-main\suricata\rules
+rule-files:
+  - local.rules
+
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: c:\Users\ASFJK\Downloads\ai-powered-intrusion-detection-system-main\ai-powered-intrusion-detection-system-main\suricata\eve.json
+      types:
+        - alert
+        - http
+        - dns
+        - flow
+
+logging:
+  level: info
+
+pcap:
+  - interface: \Device\NPF_{BDDA9576-4524-45FB-8A53-60DCEC5A1D57}
+    buffer-size: 1024
+    checksum-checks: no

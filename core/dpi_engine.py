@@ -36,6 +36,27 @@ def scan_payload(payload):
     except:
         return []
 
+def send_to_sandbox(payload, filename="network_payload.bin"):
+    """
+    Submits a suspicious binary payload to the Sandbox API (e.g. Cuckoo Sandbox) 
+    for automated dynamic detonation and reverse engineering.
+    """
+    cuckoo_url = os.getenv("CUCKOO_API_URL")
+    if not cuckoo_url:
+        return None # Sandbox disabled
+        
+    try:
+        import requests
+        files = {"file": (filename, payload)}
+        res = requests.post(cuckoo_url, files=files, timeout=4)
+        if res.status_code == 200:
+            task_id = res.json().get("task_id")
+            print(f"[!] Detonating payload in Sandbox. Task ID: {task_id}")
+            return task_id
+    except Exception as e:
+        print(f"[-] Sandbox Submission Error: {e}")
+    return None
+
 def background_dpi_sniffer(interface="en0", callback=None):
     """
     Parallel SOC Sniffer: Intercepts raw binary payloads from the network 

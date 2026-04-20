@@ -34,6 +34,20 @@ rule Shellcode_Pattern {
         $nop
 }
 
+rule ZeroDay_Advanced_Exploit {
+    meta:
+        description = "Detects advanced heap/stack manipulation patterns common in Zero-Day RCE"
+        severity = "Critical"
+    strings:
+        $h1 = { 55 89 E5 81 EC ?? ?? ?? ?? 83 EC 0C } // Standard function prologue with large stack align
+        $h2 = { 48 83 EC ?? 48 8D 05 ?? ?? ?? ?? 48 89 44 24 } // x64 stack pivot
+        $h3 = "eval(atob(" nocase // Encoded JS execution
+        $h4 = "VirtualAlloc" nocase // Memory allocation in shellcode
+        $h5 = "WriteProcessMemory" nocase
+    condition:
+        any of them
+}
+
 rule Phishing_Redirect {
     meta:
         description = "Suspicious URL redirection patterns"
@@ -44,3 +58,4 @@ rule Phishing_Redirect {
     condition:
         any of them
 }
+

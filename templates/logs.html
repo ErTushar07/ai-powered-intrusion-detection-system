@@ -54,6 +54,7 @@
                             <th>Source IP</th>
                             <th>Historical</th>
                             <th>AI Diag</th>
+                            <th>MITRE TTP</th>
                             <th>Raw Conf</th>
                             <th class="text-center">Forensic Conf</th>
                             <th class="text-center">Global Risk</th>
@@ -69,6 +70,11 @@
                             <td><span class="text-primary fw-bold">{{ log.source_ip }}</span></td>
                             <td><span class="badge border border-info text-info">{{ log.historical_label or 'N/A' }}</span></td>
                             <td><span class="badge border border-warning text-warning">{{ log.ai_diagnosis or 'N/A' }}</span></td>
+                            <td>
+                                <span class="badge bg-info text-dark" style="font-size: 0.7rem;">
+                                    <i class="fas fa-shield-virus"></i> {{ log.mitre_technique or 'N/A' }}
+                                </span>
+                            </td>
                             <td class="text-faded text-xs">{{ log.raw_ai_conf or 'N/A' }}</td>
                             <td class="text-danger fw-bold">{{ log.final_forensic_label or log.label }}</td>
                             <td class="text-center">

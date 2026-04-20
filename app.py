@@ -1,3 +1,7 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+# os.environ["KERAS_BACKEND"] = "tensorflow"
 import pandas as pd
 import numpy as np
 import joblib
@@ -33,7 +37,7 @@ def load_config():
         "active_block": os.getenv('ACTIVE_BLOCK', 'False') == 'True',
         "confidence_threshold": int(os.getenv('CONFIDENCE_THRESHOLD', 95)),
         "webhook_url": os.getenv('WEBHOOK_URL', ""),
-        "sniff_interface": os.getenv('SNIFF_INTERFACE', "en0"),
+        "sniff_interface": os.getenv('SNIFF_INTERFACE', ""),
         "gemini_api_key": os.getenv('GEMINI_API_KEY', ""),
         "abuseipdb_api_key": os.getenv('ABUSEIPDB_API_KEY', "")
     }
@@ -45,6 +49,11 @@ def load_config():
             for k, v in local_cfg.items():
                 if not config.get(k): # Prioritize env
                     config[k] = v
+                    
+    # Provide defaults ONLY AFTER merges
+    if not config.get("sniff_interface"):
+        config["sniff_interface"] = "en0"
+        
     return config
 
 def save_config(data):
@@ -233,6 +242,9 @@ def start_live_sniffer():
             ACTIVE_SNIFFER.join()
         except Exception as e:
             print(f"[-] SOC Engine Exception: {e}")
+            import traceback
+            with open("error_log.txt", "w") as ef:
+                ef.write(traceback.format_exc())
             LIVE_SNIFFING_ACTIVE = False
     else:
         print("[-] Notice: App not running as sudo. Native packet capturing disabled.")
@@ -734,6 +746,12 @@ def stream():
                             "mode": "live"
                         }
                         yield f"data: {json.dumps(data)}\n\n"
+                    
+                    if not lines:
+                        # Heartbeat so UI badge flips to Live even if no packets are flushed yet
+                        data = {"is_threat": False, "mode": "live", "Source_IP": None, "Dest_IP": None}
+                        yield f"data: {json.dumps(data)}\n\n"
+                        
                     time.sleep(1)
                     
                 # ---------------- SIMULATOR LOGIC ----------------
@@ -812,7 +830,24 @@ def analyze():
     if request.method == 'POST':
         file = request.files.get('file')
         if file:
-            df = pd.read_csv(file)
+            filename = file.filename.lower()
+            if filename.endswith('.pcap') or filename.endswith('.pcapng'):
+                from cicflowmeter.sniffer import create_sniffer
+                import os
+                temp_pcap = "data/captures/temp_upload.pcap"
+                temp_csv = "data/captures/temp_upload.csv"
+                file.save(temp_pcap)
+                if os.path.exists(temp_csv):
+                    os.remove(temp_csv)
+                
+                print("[*] Decoding PCAP to CSV via CICFlowMeter...")
+                sniffer, session = create_sniffer(input_file=temp_pcap, input_interface=None, output_mode="csv", output=temp_csv, verbose=False)
+                sniffer.start()
+                sniffer.join()
+                df = pd.read_csv(temp_csv)
+            else:
+                df = pd.read_csv(file)
+            
             df.columns = df.columns.str.strip()
             display_df = df.copy()
 
